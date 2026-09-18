@@ -1,0 +1,154 @@
+---
+title: "Persistence, not rhythmicity: getting started with par2circadian"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Persistence, not rhythmicity: getting started with par2circadian}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(par2circadian)
+```
+
+## The question this package answers
+
+Rhythm-detection methods — JTK_CYCLE, RAIN, MetaCycle, ARSER — all answer one
+question: *does this gene cycle?* They fit or rank a periodic waveform and
+return a p-value against the null of no rhythm.
+
+`par2circadian` answers a different question: *how long does this gene's
+expression remember?* It fits
+
+$$x_t = \phi_1 x_{t-1} + \phi_2 x_{t-2} + \epsilon_t$$
+
+to each gene and returns the modulus of the largest root of
+$r^2 - \phi_1 r - \phi_2 = 0$. That single number, $|\lambda|$, is how strongly
+recent expression constrains future expression. It is a property of the
+dynamics, not of a waveform, and nothing in it references a 24 h period.
+
+The two questions come apart in both directions, which is the point:
+
+* red noise with no rhythm at all scores a high $|\lambda|$ — correctly, because
+  it is genuinely persistent;
+* a clean fixed-period cosine scores low, because a deterministic waveform is
+  not autoregressively constrained.
+
+So $|\lambda|$ is **not** a rhythmicity test and must not be reported as one.
+Run it alongside a rhythm-detection method. On a benchmark of noise-driven
+oscillators at 24 timepoints it detected 92% of true oscillators against 40–62%
+for JTK_CYCLE, ARSER and RAIN; on a clean 24 h cosine those methods reached
+100% and $|\lambda|$ reached 12%.
+
+## One gene
+
+```{r one-gene}
+set.seed(1)
+x <- as.numeric(arima.sim(list(ar = c(0.6, -0.3)), n = 48))
+fit_ar2(x)
+```
+
+`root_type` matters as much as the magnitude. Complex roots mean the dynamics
+are oscillatory; real roots mean overdamped decay. A high $|\lambda|$ with real
+roots is a persistent gene that does **not** oscillate — reading it as an
+oscillator is the commonest misuse of the metric:
+
+```{r classify}
+classify_dynamics(0.92, "Complex")
+classify_dynamics(0.92, "Real")
+```
+
+`half_life` and `eigenperiod` are reported in samples. Convert to time by
+passing your sampling interval:
+
+```{r units}
+fit <- fit_ar2(x)
+half_life(fit$eigenvalue, sampling_interval = 1)   # hourly sampling
+eigenperiod(fit$phi1, fit$phi2, sampling_interval = 1)
+```
+
+## How precise is one gene's estimate?
+
+Not very, and this is the limitation most worth respecting. Circadian designs
+are short — 12 to 48 points — and an AR(2) fit on 24 points carries a 95%
+interval roughly 0.4 wide. Ask for it explicitly:
+
+```{r bootstrap}
+short <- as.numeric(arima.sim(list(ar = c(0.6, -0.3)), n = 24))
+fit_ar2(short, n_bootstrap = 500, seed = 42)$eigenvalue_ci
+```
+
+The interval comes from a residual bootstrap, so it needs only the one series —
+no biological replicates, which one-pool-per-timepoint designs do not provide.
+Do not interpret a difference between two genes that is smaller than their
+intervals. The estimator is also biased upward below about 24 timepoints, so
+treat single-gene values from a 12-point series as ordinal at best.
+
+## A whole dataset, and the hierarchy
+
+The result that motivates the metric: in intact tissue, core clock genes are
+more persistent than their targets, which are more persistent than background.
+Here is the real mouse liver series shipped with the package (a 300-gene subset
+of GSE11923, sampled hourly for 48 h):
+
+```{r batch}
+path <- system.file("extdata", "gse11923_subset.csv", package = "par2circadian")
+liver <- read.csv(path, check.names = FALSE)
+values <- as.matrix(liver[, -1])
+
+fits <- fit_ar2_batch(values, gene_names = liver[[1]])
+head(fits, 4)
+
+table(fits$root_type)
+```
+
+`discover_hierarchy()` stratifies by gene layer and reports the clock-to-target
+difference, the gearbox gap:
+
+```{r hierarchy}
+h <- discover_hierarchy(fits)
+c(clock = h$clock_median, target = h$target_median, background = h$background_median)
+h$gearbox_gap
+h$n_clock
+```
+
+This subset is a random 300 genes, so it contains few clock genes and the gap it
+reports is not the published whole-transcriptome figure — it is here to show the
+call, not to reproduce the result. The A–F `health_grade` is likewise a
+descriptive banding taken from intact mouse liver, not a validated diagnostic.
+
+For another species or nomenclature, supply your own sets:
+
+```{r custom-sets}
+h2 <- discover_hierarchy(fits,
+  clock_genes = c("Per1", "Per2", "Arntl"),
+  target_genes = c("Myc", "Wee1")
+)
+h2$n_clock
+```
+
+## Agreement with the Python implementation
+
+The reference implementation is the Python package `par2-circadian`. The test
+suite refits all 300 genes above and compares them one at a time: every gene
+agrees exactly on $|\lambda|$, $\phi_1$, $\phi_2$, $R^2$, half-life,
+eigenperiod and root type at the six decimal places both implementations
+report. The worst-gene difference is 0, not merely small. Comparing the *worst*
+gene rather than the mean is deliberate — a wrong estimator (Yule–Walker instead of OLS, a biased
+variance divisor, no mean-centring, a shifted lag alignment) still correlates at
+0.999 with the right one while moving individual genes enough to cross a
+persistence threshold.
+
+The exception is bootstrap intervals: R and NumPy draw from different random
+generators, so the same seed selects different resamples. Interval widths are
+comparable; endpoints are not.
+
+## Citing
+
+```{r citation, eval = FALSE}
+citation("par2circadian")
+```
+
+Cite the method preprint,
+<https://doi.org/10.21203/rs.3.rs-9283100/v1>, alongside the software.

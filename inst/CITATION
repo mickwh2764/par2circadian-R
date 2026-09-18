@@ -1,0 +1,23 @@
+citHeader("To cite par2circadian in publications, cite both the method and the software:")
+
+bibentry(
+  bibtype = "Article",
+  title = paste(
+    "AR(2) eigenvalue modulus as a measure of temporal persistence in gene",
+    "expression: circadian hierarchy emerges from two coefficients"
+  ),
+  author = person("Michael", "Whiteside"),
+  year = "2026",
+  journal = "Research Square",
+  doi = "10.21203/rs.3.rs-9283100/v1",
+  note = "Preprint, under review"
+)
+
+bibentry(
+  bibtype = "Manual",
+  title = "par2circadian: AR(2) Eigenvalue Persistence Analysis of Circadian Time Series",
+  author = person("Michael", "Whiteside"),
+  year = "2026",
+  note = "R package version 0.1.0",
+  url = "https://github.com/mickwh2764/par2circadian-R"
+)
