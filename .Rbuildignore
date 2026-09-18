@@ -2,6 +2,6 @@
 ^data-raw$
 ^\.git$
 ^\.github$
-^NEWS\.md$
+^cran-comments\.md$
 ^.*\.Rproj$
 ^\.Rproj\.user$
