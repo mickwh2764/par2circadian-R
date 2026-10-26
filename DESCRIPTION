@@ -1,6 +1,6 @@
 Package: par2circadian
 Title: AR(2) Eigenvalue Persistence Analysis of Circadian Time Series
-Version: 0.1.0
+Version: 0.1.1
 Authors@R:
     person("Michael", "Whiteside", email = "mickwh@msn.com",
            role = c("aut", "cre", "cph"),

@@ -90,3 +90,11 @@ test_that("print shows the fit without altering it", {
   expect_output(print(fit), "\\|lambda\\|")
   expect_identical(print(fit), fit)
 })
+
+test_that("an unstable fit reports its spectral radius without clipping", {
+  fit <- fit_ar2(3^(0:11))
+  expect_equal(fit$phi1, 4, tolerance = 1e-6)
+  expect_equal(fit$phi2, -3, tolerance = 1e-6)
+  expect_equal(fit$eigenvalue, 3, tolerance = 1e-6)
+  expect_true(is.na(fit$half_life))
+})

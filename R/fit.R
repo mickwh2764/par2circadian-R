@@ -115,7 +115,7 @@ eigen_from_coefficients <- function(phi1, phi2) {
     root_type <- "Real"
   }
   list(
-    eigenvalue = min(eigenvalue, 2),
+    eigenvalue = eigenvalue,
     eigenperiod = eigenperiod,
     root_type = root_type
   )
