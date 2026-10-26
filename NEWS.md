@@ -1,3 +1,9 @@
+# par2circadian 0.1.1
+
+* `fit_ar2()` no longer caps `|lambda|` at 2. An unstable fit now reports the
+  spectral radius of its fitted coefficients, matching par2-circadian 1.2.1.
+  Stable fits (`|lambda|` < 1) are unchanged.
+
 # par2circadian 0.1.0
 
 First release: the R implementation of the AR(2) eigenvalue persistence method,
