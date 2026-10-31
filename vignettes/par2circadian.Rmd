@@ -68,6 +68,21 @@ half_life(fit$eigenvalue, sampling_interval = 1)   # hourly sampling
 eigenperiod(fit$phi1, fit$phi2, sampling_interval = 1)
 ```
 
+`|lambda|` itself is per sample, so the same gene gives a different value at 1-,
+2- or 4-hourly sampling. The decay time constant
+\(\tau = -\Delta t / \ln|\lambda|\) puts it in real time and can be compared
+across designs. Pass `sampling_interval` to `fit_ar2()`, or convert directly:
+
+```{r timescale}
+fit_ar2(x, sampling_interval = 1)$timescale   # hours, for hourly sampling
+timescale(fit$eigenvalue, sampling_interval = 1)
+```
+
+With `n_bootstrap` as well, the fit carries `timescale_ci`, and
+`timescale_imprecise` is `TRUE`, with a warning, when that interval is unbounded
+or spans more than tenfold. Converting units does not make a short series
+precise.
+
 ## How precise is one gene's estimate?
 
 Not very, and this is the limitation most worth respecting. Circadian designs

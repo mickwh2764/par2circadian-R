@@ -6,11 +6,14 @@
 #'   returned with a meaningless fit.
 #' @param gene_names Optional character vector of gene identifiers. Defaults to
 #'   the matrix rownames, or \code{Gene_1 ... Gene_n} when there are none.
+#' @param sampling_interval Optional time between consecutive samples. When
+#'   supplied, a \code{timescale} column is added; see \code{\link{fit_ar2}}.
 #'
 #' @return A data frame of class \code{par2_batch}, one row per fitted gene,
 #'   ordered by decreasing \eqn{|\lambda|}, with columns \code{gene},
 #'   \code{eigenvalue}, \code{phi1}, \code{phi2}, \code{r2}, \code{root_type},
-#'   \code{half_life} and \code{eigenperiod}.
+#'   \code{half_life} and \code{eigenperiod}, plus \code{timescale} when
+#'   \code{sampling_interval} is supplied.
 #'
 #' @examples
 #' set.seed(1)
@@ -19,7 +22,7 @@
 #' head(fit_ar2_batch(m))
 #'
 #' @export
-fit_ar2_batch <- function(expression, gene_names = NULL) {
+fit_ar2_batch <- function(expression, gene_names = NULL, sampling_interval = NULL) {
   m <- as.matrix(expression)
   if (!is.numeric(m)) {
     stop("expression must be numeric", call. = FALSE)
@@ -40,11 +43,13 @@ fit_ar2_batch <- function(expression, gene_names = NULL) {
     if (length(values) < 6L) {
       return(NULL)
     }
-    fit <- tryCatch(fit_ar2(values), error = function(e) NULL)
+    fit <- tryCatch(fit_ar2(values, sampling_interval = sampling_interval),
+      error = function(e) NULL
+    )
     if (is.null(fit)) {
       return(NULL)
     }
-    data.frame(
+    row <- data.frame(
       gene = gene_names[i],
       eigenvalue = fit$eigenvalue,
       phi1 = fit$phi1,
@@ -55,6 +60,10 @@ fit_ar2_batch <- function(expression, gene_names = NULL) {
       eigenperiod = fit$eigenperiod,
       stringsAsFactors = FALSE
     )
+    if (!is.null(sampling_interval)) {
+      row$timescale <- fit$timescale
+    }
+    row
   })
 
   out <- do.call(rbind, rows)
@@ -65,6 +74,9 @@ fit_ar2_batch <- function(expression, gene_names = NULL) {
       half_life = numeric(0), eigenperiod = numeric(0),
       stringsAsFactors = FALSE
     )
+    if (!is.null(sampling_interval)) {
+      out$timescale <- numeric(0)
+    }
   } else {
     out <- out[order(-out$eigenvalue), , drop = FALSE]
     rownames(out) <- NULL

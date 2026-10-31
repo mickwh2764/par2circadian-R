@@ -100,3 +100,54 @@ test_that("an unstable fit reports its spectral radius without clipping", {
   expect_equal(fit$eigenvalue, 3, tolerance = 1e-6)
   expect_true(is.na(fit$half_life))
 })
+
+test_that("timescale converts |lambda| to time units", {
+  expect_equal(timescale(exp(-1), sampling_interval = 2), 2)
+  expect_equal(timescale(0.5, 1) * log(2), half_life(0.5, 1))
+  expect_identical(timescale(0), 0)
+  expect_identical(timescale(1), Inf)
+})
+
+test_that("fit_ar2 adds timescale only when sampling_interval is given", {
+  set.seed(6)
+  x <- rnorm(48)
+  expect_null(fit_ar2(x)$timescale)
+  one <- fit_ar2(x, sampling_interval = 1)
+  two <- fit_ar2(x, sampling_interval = 2)
+  expect_equal(one$timescale, timescale(one$eigenvalue, 1), tolerance = 1e-4)
+  expect_equal(two$timescale, 2 * one$timescale, tolerance = 1e-3)
+  expect_error(fit_ar2(x, sampling_interval = 0), "sampling_interval")
+})
+
+test_that("unstable fits report no timescale", {
+  expect_true(is.na(fit_ar2(3^(0:11), sampling_interval = 2)$timescale))
+})
+
+test_that("a precise fit gives an ordered interval without a warning", {
+  set.seed(8)
+  x <- as.numeric(stats::arima.sim(list(ar = c(0.5, -0.3)), n = 400))
+  expect_warning(
+    fit <- fit_ar2(x, n_bootstrap = 300, seed = 1, sampling_interval = 1),
+    NA
+  )
+  expect_lt(fit$timescale_ci[1L], fit$timescale)
+  expect_gt(fit$timescale_ci[2L], fit$timescale)
+  expect_false(fit$timescale_imprecise)
+})
+
+test_that("a wide timescale interval is flagged with a warning", {
+  set.seed(9)
+  x <- cos(2 * pi * (0:11) / 12) + 0.5 * rnorm(12)
+  expect_warning(
+    fit <- fit_ar2(x, n_bootstrap = 300, seed = 1, sampling_interval = 2),
+    "too short or too noisy"
+  )
+  expect_true(fit$timescale_imprecise)
+})
+
+test_that("fit_ar2_batch carries a timescale column on request", {
+  set.seed(10)
+  m <- matrix(rnorm(72), nrow = 3)
+  expect_false("timescale" %in% names(fit_ar2_batch(m)))
+  expect_true("timescale" %in% names(fit_ar2_batch(m, sampling_interval = 2)))
+})

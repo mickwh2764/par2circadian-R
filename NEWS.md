@@ -1,3 +1,14 @@
+# par2circadian 0.2.0
+
+* New `timescale()` converts `|lambda|` to the decay time constant
+  tau = -sampling_interval / ln|lambda| in real time units, which, unlike
+  `|lambda|`, can be compared across sampling designs.
+* `fit_ar2()` and `fit_ar2_batch()` gain `sampling_interval`. When supplied, the
+  fit carries `timescale`; with `n_bootstrap` too, `timescale_ci` and
+  `timescale_imprecise`, which is `TRUE`, with a warning, when the interval is
+  unbounded or spans more than tenfold. Matches par2-circadian 1.3.0.
+* Existing outputs are unchanged when `sampling_interval` is not supplied.
+
 # par2circadian 0.1.1
 
 * `bootstrap_ar2()` and `fit_ar2()` no longer restore `.Random.seed` in the

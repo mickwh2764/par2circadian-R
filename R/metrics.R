@@ -27,6 +27,39 @@ half_life <- function(eigenvalue, sampling_interval = 2) {
   sampling_interval * log(2) / (-log(eigenvalue))
 }
 
+#' Decay timescale in time units
+#'
+#' Converts \eqn{|\lambda|} to the decay time constant
+#' \eqn{\tau = -\Delta t / \ln|\lambda|}: the time for a perturbation to fall
+#' to \eqn{1/e} (about 37\%) of its size. Unlike \eqn{|\lambda|}, which is per
+#' sample, \eqn{\tau} can be compared across studies sampled at different
+#' intervals. The half-life is \eqn{\tau \ln 2}.
+#'
+#' Converting units does not remove short-series imprecision; report the
+#' interval from \code{fit_ar2(x, n_bootstrap =, sampling_interval =)}.
+#'
+#' @param eigenvalue Numeric \eqn{|\lambda|}.
+#' @param sampling_interval Time between consecutive samples, in whatever units
+#'   the result should be reported in. Defaults to 2 hours.
+#'
+#' @return \eqn{\tau} in the units of \code{sampling_interval}: \code{0} when
+#'   \eqn{|\lambda| \le 0}, and \code{Inf} at or above 1, where nothing decays.
+#'
+#' @examples
+#' timescale(0.781, sampling_interval = 1)
+#' timescale(0.8)
+#'
+#' @export
+timescale <- function(eigenvalue, sampling_interval = 2) {
+  if (eigenvalue <= 0) {
+    return(0)
+  }
+  if (eigenvalue >= 1) {
+    return(Inf)
+  }
+  sampling_interval / (-log(eigenvalue))
+}
+
 #' Intrinsic eigenperiod in time units
 #'
 #' The oscillation period implied by a complex-root AR(2) fit. This is the
