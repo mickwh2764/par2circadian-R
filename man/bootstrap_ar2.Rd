@@ -13,7 +13,10 @@ bootstrap_ar2(centred, phi1, phi2, n_bootstrap = 2000, seed = NULL, conf = 95)
 
 \item{n_bootstrap}{Number of bootstrap draws.}
 
-\item{seed}{Optional integer seed.}
+\item{seed}{Optional integer seed. When supplied, \code{set.seed(seed)} is
+called before resampling, which resets the session's random-number
+stream. Leave \code{NULL} and call \code{set.seed()} yourself to keep
+control of the stream.}
 
 \item{conf}{Confidence level as a percentage.}
 }

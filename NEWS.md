@@ -1,5 +1,9 @@
 # par2circadian 0.1.1
 
+* `bootstrap_ar2()` and `fit_ar2()` no longer restore `.Random.seed` in the
+  global environment after a seeded bootstrap. Supplying `seed` now simply
+  calls `set.seed(seed)`; leave it `NULL` to draw from the caller's stream.
+* Documented the return value of `CORE_CLOCK_GENES` and `KNOWN_TARGET_GENES`.
 * `fit_ar2()` no longer caps `|lambda|` at 2. An unstable fit now reports the
   spectral radius of its fitted coefficients, matching par2-circadian 1.2.1.
   Stable fits (`|lambda|` < 1) are unchanged.

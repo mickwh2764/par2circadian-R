@@ -7,6 +7,10 @@
 #' nomenclatures.
 #'
 #' @format Character vectors.
+#' @return Two character vectors of gene symbols: \code{CORE_CLOCK_GENES}
+#'   and \code{KNOWN_TARGET_GENES}, each listing
+#'   mouse and human forms. They are the default sets that
+#'   \code{\link{classify_gene_layer}} matches against.
 #' @name gene_sets
 #' @export
 CORE_CLOCK_GENES <- c(

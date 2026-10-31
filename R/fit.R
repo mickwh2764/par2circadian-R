@@ -17,7 +17,10 @@
 #' @param x Numeric vector of expression values, at least 6 timepoints.
 #' @param n_bootstrap Number of residual-bootstrap draws. When greater than
 #'   zero, percentile confidence intervals are added; 2000 is ample.
-#' @param seed Optional integer seed for reproducible bootstrap intervals.
+#' @param seed Optional integer seed for reproducible bootstrap intervals. When supplied, \code{set.seed(seed)} is
+#'   called before resampling, which resets the session's random-number
+#'   stream. Leave \code{NULL} and call \code{set.seed()} yourself to keep
+#'   control of the stream.
 #' @param conf Confidence level for the bootstrap intervals, as a percentage.
 #'
 #' @return An object of class \code{par2_fit}: a list with elements

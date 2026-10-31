@@ -9,7 +9,10 @@
 #' @param centred The mean-centred series the coefficients were fitted to.
 #' @param phi1,phi2 Fitted AR(2) coefficients.
 #' @param n_bootstrap Number of bootstrap draws.
-#' @param seed Optional integer seed.
+#' @param seed Optional integer seed. When supplied, \code{set.seed(seed)} is
+#'   called before resampling, which resets the session's random-number
+#'   stream. Leave \code{NULL} and call \code{set.seed()} yourself to keep
+#'   control of the stream.
 #' @param conf Confidence level as a percentage.
 #'
 #' @return A list with \code{eigenvalue_ci}, \code{phi1_ci}, \code{phi2_ci}
@@ -35,19 +38,6 @@ bootstrap_ar2 <- function(centred, phi1, phi2, n_bootstrap = 2000, seed = NULL,
   resid <- resid - mean(resid)
 
   if (!is.null(seed)) {
-    old <- if (exists(".Random.seed", envir = globalenv())) {
-      get(".Random.seed", envir = globalenv())
-    } else {
-      NULL
-    }
-    on.exit(
-      if (is.null(old)) {
-        rm(".Random.seed", envir = globalenv())
-      } else {
-        assign(".Random.seed", old, envir = globalenv())
-      },
-      add = TRUE
-    )
     set.seed(seed)
   }
 
