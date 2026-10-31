@@ -5,7 +5,7 @@
 \alias{print.par2_fit}
 \title{Fit an AR(2) model to one expression time series}
 \usage{
-fit_ar2(x, n_bootstrap = 0, seed = NULL, conf = 95)
+fit_ar2(x, n_bootstrap = 0, seed = NULL, conf = 95, sampling_interval = NULL)
 
 \method{print}{par2_fit}(x, ...)
 }
@@ -22,6 +22,12 @@ control of the stream.}
 
 \item{conf}{Confidence level for the bootstrap intervals, as a percentage.}
 
+\item{sampling_interval}{Optional time between consecutive samples (e.g.
+\code{2} for 2-hourly sampling). When supplied, the decay time constant
+\eqn{\tau = -\Delta t / \ln|\lambda|} is added in the same units; see
+\code{\link{timescale}}. \eqn{|\lambda|} is per sample and cannot be
+compared across sampling designs; \eqn{\tau} can.}
+
 \item{...}{Ignored.}
 }
 \value{
@@ -30,7 +36,12 @@ An object of class \code{par2_fit}: a list with elements
   \code{root_type} (\code{"Complex"} or \code{"Real"}), \code{half_life} in
   samples, and \code{eigenperiod} in samples (\code{NA} for real roots).
   With \code{n_bootstrap > 0} it also carries \code{eigenvalue_ci},
-  \code{phi1_ci}, \code{phi2_ci} and \code{n_timepoints}.
+  \code{phi1_ci}, \code{phi2_ci} and \code{n_timepoints}. With
+  \code{sampling_interval} it carries \code{timescale} (\code{NA} when
+  \eqn{|\lambda| \ge 1}); with both, also \code{timescale_ci} (\code{Inf}
+  where the interval reaches 1) and \code{timescale_imprecise}, which is
+  \code{TRUE}, with a warning, when the interval is unbounded or spans more
+  than tenfold.
 }
 \description{
 Fits \eqn{x_t = \phi_1 x_{t-1} + \phi_2 x_{t-2} + \epsilon_t} to a
@@ -62,9 +73,11 @@ x <- as.numeric(arima.sim(list(ar = c(0.6, -0.3)), n = 48))
 fit <- fit_ar2(x)
 fit$eigenvalue
 fit$root_type
+fit_ar2(x, sampling_interval = 2)$timescale   # hours, for 2-hourly sampling
 
 }
 \seealso{
 \code{\link{fit_ar2_batch}} for a whole expression matrix,
-  \code{\link{classify_dynamics}}, \code{\link{half_life}}.
+  \code{\link{classify_dynamics}}, \code{\link{half_life}},
+  \code{\link{timescale}}.
 }

@@ -1,6 +1,6 @@
 Package: par2circadian
 Title: AR(2) Eigenvalue Persistence Analysis of Circadian Time Series
-Version: 0.1.1
+Version: 0.2.0
 Authors@R:
     person("Michael", "Whiteside", email = "mickwh@msn.com",
            role = c("aut", "cre", "cph"),
@@ -12,7 +12,7 @@ Description: Estimates temporal persistence in gene expression time series by
     measures how strongly recent expression constrains future expression, which
     separates clock genes from their targets and from background in intact
     tissue. Provides single-series and matrix-wide fitting, root-type
-    classification, half-life and intrinsic-period conversions,
+    classification, half-life, decay-timescale and intrinsic-period conversions,
     residual-bootstrap confidence intervals for short series, and hierarchy
     summaries. Numerically equivalent to the reference 'Python' implementation
     'par2-circadian'. The method is described in Whiteside (2026)

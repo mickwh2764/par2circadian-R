@@ -4,7 +4,7 @@
 \alias{fit_ar2_batch}
 \title{Fit AR(2) to every gene in an expression matrix}
 \usage{
-fit_ar2_batch(expression, gene_names = NULL)
+fit_ar2_batch(expression, gene_names = NULL, sampling_interval = NULL)
 }
 \arguments{
 \item{expression}{A numeric matrix of genes (rows) by timepoints (columns),
@@ -14,12 +14,16 @@ returned with a meaningless fit.}
 
 \item{gene_names}{Optional character vector of gene identifiers. Defaults to
 the matrix rownames, or \code{Gene_1 ... Gene_n} when there are none.}
+
+\item{sampling_interval}{Optional time between consecutive samples. When
+supplied, a \code{timescale} column is added; see \code{\link{fit_ar2}}.}
 }
 \value{
 A data frame of class \code{par2_batch}, one row per fitted gene,
   ordered by decreasing \eqn{|\lambda|}, with columns \code{gene},
   \code{eigenvalue}, \code{phi1}, \code{phi2}, \code{r2}, \code{root_type},
-  \code{half_life} and \code{eigenperiod}.
+  \code{half_life} and \code{eigenperiod}, plus \code{timescale} when
+  \code{sampling_interval} is supplied.
 }
 \description{
 Fit AR(2) to every gene in an expression matrix

@@ -37,6 +37,10 @@ fits <- fit_ar2_batch(expression_matrix)   # genes x timepoints
 discover_hierarchy(fits)$gearbox_gap       # Clock - Target median |lambda|
 
 fit_ar2(short_series, n_bootstrap = 2000, seed = 1)$eigenvalue_ci
+
+# |lambda| is per sample; tau = -dt / ln|lambda| is in hours and comparable
+# across sampling designs (flagged when its interval spans more than tenfold)
+fit_ar2(x, n_bootstrap = 2000, seed = 1, sampling_interval = 2)$timescale_ci
 ```
 
 `vignette("par2circadian")` works through a mouse liver series end to end.

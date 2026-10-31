@@ -22,13 +22,23 @@
 #'   stream. Leave \code{NULL} and call \code{set.seed()} yourself to keep
 #'   control of the stream.
 #' @param conf Confidence level for the bootstrap intervals, as a percentage.
+#' @param sampling_interval Optional time between consecutive samples (e.g.
+#'   \code{2} for 2-hourly sampling). When supplied, the decay time constant
+#'   \eqn{\tau = -\Delta t / \ln|\lambda|} is added in the same units; see
+#'   \code{\link{timescale}}. \eqn{|\lambda|} is per sample and cannot be
+#'   compared across sampling designs; \eqn{\tau} can.
 #'
 #' @return An object of class \code{par2_fit}: a list with elements
 #'   \code{eigenvalue} (\eqn{|\lambda|}), \code{phi1}, \code{phi2}, \code{r2},
 #'   \code{root_type} (\code{"Complex"} or \code{"Real"}), \code{half_life} in
 #'   samples, and \code{eigenperiod} in samples (\code{NA} for real roots).
 #'   With \code{n_bootstrap > 0} it also carries \code{eigenvalue_ci},
-#'   \code{phi1_ci}, \code{phi2_ci} and \code{n_timepoints}.
+#'   \code{phi1_ci}, \code{phi2_ci} and \code{n_timepoints}. With
+#'   \code{sampling_interval} it carries \code{timescale} (\code{NA} when
+#'   \eqn{|\lambda| \ge 1}); with both, also \code{timescale_ci} (\code{Inf}
+#'   where the interval reaches 1) and \code{timescale_imprecise}, which is
+#'   \code{TRUE}, with a warning, when the interval is unbounded or spans more
+#'   than tenfold.
 #'
 #' @section Precision:
 #' A point estimate from a short series is imprecise: at 24 evenly sampled
@@ -42,11 +52,19 @@
 #' fit <- fit_ar2(x)
 #' fit$eigenvalue
 #' fit$root_type
+#' fit_ar2(x, sampling_interval = 2)$timescale   # hours, for 2-hourly sampling
 #'
 #' @seealso \code{\link{fit_ar2_batch}} for a whole expression matrix,
-#'   \code{\link{classify_dynamics}}, \code{\link{half_life}}.
+#'   \code{\link{classify_dynamics}}, \code{\link{half_life}},
+#'   \code{\link{timescale}}.
 #' @export
-fit_ar2 <- function(x, n_bootstrap = 0, seed = NULL, conf = 95) {
+fit_ar2 <- function(x, n_bootstrap = 0, seed = NULL, conf = 95,
+                    sampling_interval = NULL) {
+  if (!is.null(sampling_interval) &&
+      !(is.numeric(sampling_interval) && length(sampling_interval) == 1L &&
+        isTRUE(sampling_interval > 0))) {
+    stop("sampling_interval must be a single positive number", call. = FALSE)
+  }
   x <- as.numeric(x)
   if (length(x) < 6L) {
     stop(sprintf("Need >= 6 timepoints, got %d", length(x)), call. = FALSE)
@@ -88,7 +106,44 @@ fit_ar2 <- function(x, n_bootstrap = 0, seed = NULL, conf = 95) {
     ))
   }
 
+  if (!is.null(sampling_interval)) {
+    result <- c(result, timescale_fields(result, sampling_interval))
+  }
+
   structure(result, class = "par2_fit")
+}
+
+# A timescale interval whose upper end is more than this many times its lower
+# end (or is unbounded) cannot support a per-gene persistence claim.
+TIMESCALE_IMPRECISE_RATIO <- 10
+
+#' @keywords internal
+#' @noRd
+timescale_fields <- function(result, sampling_interval) {
+  tau <- timescale(result$eigenvalue, sampling_interval)
+  fields <- list(timescale = if (is.finite(tau)) round(tau, 4) else NA_real_)
+
+  ci <- result$eigenvalue_ci
+  if (is.null(ci)) {
+    return(fields)
+  }
+
+  low <- timescale(ci[1L], sampling_interval)
+  high <- timescale(ci[2L], sampling_interval)
+  fields$timescale_ci <- c(
+    if (is.finite(low)) round(low, 4) else low,
+    if (is.finite(high)) round(high, 4) else high
+  )
+  imprecise <- !is.finite(high) || low <= 0 || high / low > TIMESCALE_IMPRECISE_RATIO
+  fields$timescale_imprecise <- imprecise
+  if (imprecise) {
+    upper <- if (is.finite(high)) format(signif(high, 3)) else "unbounded"
+    warning(sprintf(
+      "timescale interval [%s, %s] spans more than %g-fold: this series is too short or too noisy to support a per-gene persistence claim",
+      format(signif(low, 3)), upper, TIMESCALE_IMPRECISE_RATIO
+    ), call. = FALSE)
+  }
+  fields
 }
 
 #' @keywords internal
@@ -151,6 +206,13 @@ print.par2_fit <- function(x, ...) {
   }
   if (!is.na(x$eigenperiod)) {
     cat(sprintf("  eigenperiod = %.4f samples\n", x$eigenperiod))
+  }
+  if (!is.null(x$timescale) && !is.na(x$timescale)) {
+    cat(sprintf("  timescale = %.4f (units of sampling_interval)", x$timescale))
+    if (!is.null(x$timescale_ci)) {
+      cat(sprintf(" [%.4f, %.4f]", x$timescale_ci[1L], x$timescale_ci[2L]))
+    }
+    cat("\n")
   }
   invisible(x)
 }
