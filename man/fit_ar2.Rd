@@ -15,7 +15,10 @@ fit_ar2(x, n_bootstrap = 0, seed = NULL, conf = 95)
 \item{n_bootstrap}{Number of residual-bootstrap draws. When greater than
 zero, percentile confidence intervals are added; 2000 is ample.}
 
-\item{seed}{Optional integer seed for reproducible bootstrap intervals.}
+\item{seed}{Optional integer seed for reproducible bootstrap intervals. When supplied, \code{set.seed(seed)} is
+called before resampling, which resets the session's random-number
+stream. Leave \code{NULL} and call \code{set.seed()} yourself to keep
+control of the stream.}
 
 \item{conf}{Confidence level for the bootstrap intervals, as a percentage.}
 

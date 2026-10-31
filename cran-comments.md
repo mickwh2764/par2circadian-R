@@ -1,5 +1,17 @@
 # cran-comments
 
+## Resubmission
+
+This is a resubmission. In response to the review:
+
+* Software names in the Description are now in single quotes ('Python',
+  'par2-circadian').
+* Added a \value section to gene_sets.Rd describing the two exported
+  character vectors.
+* The package no longer writes to the global environment. bootstrap_ar2()
+  previously saved and restored .Random.seed in .GlobalEnv; it now only calls
+  set.seed() when the user supplies a `seed` argument (default NULL).
+
 ## Test environments
 
 * local Ubuntu 22.04, R 4.1.2

@@ -73,14 +73,16 @@ test_that("bootstrap intervals are reproducible and bracket the estimate", {
   ))
 })
 
-test_that("bootstrapping leaves the caller's random stream untouched", {
-  set.seed(123)
-  before <- .Random.seed
+test_that("without a seed, bootstrapping draws from the caller's stream", {
+  set.seed(3)
   x <- as.numeric(stats::arima.sim(list(ar = c(0.5, -0.2)), n = 24))
-  after_sim <- .Random.seed
-  invisible(fit_ar2(x, n_bootstrap = 50, seed = 1))
-  expect_identical(.Random.seed, after_sim)
-  expect_false(identical(before, after_sim))
+  set.seed(123)
+  a <- fit_ar2(x, n_bootstrap = 50)
+  set.seed(123)
+  b <- fit_ar2(x, n_bootstrap = 50)
+  expect_identical(a$eigenvalue_ci, b$eigenvalue_ci)
+  expect_identical(fit_ar2(x, n_bootstrap = 50, seed = 123)$eigenvalue_ci,
+                   a$eigenvalue_ci)
 })
 
 test_that("print shows the fit without altering it", {

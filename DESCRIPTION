@@ -14,7 +14,7 @@ Description: Estimates temporal persistence in gene expression time series by
     tissue. Provides single-series and matrix-wide fitting, root-type
     classification, half-life and intrinsic-period conversions,
     residual-bootstrap confidence intervals for short series, and hierarchy
-    summaries. Numerically equivalent to the reference Python implementation
+    summaries. Numerically equivalent to the reference 'Python' implementation
     'par2-circadian'. The method is described in Whiteside (2026)
     <doi:10.21203/rs.3.rs-9283100/v1>.
 License: Apache License (>= 2)

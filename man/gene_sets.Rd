@@ -13,6 +13,12 @@ CORE_CLOCK_GENES
 
 KNOWN_TARGET_GENES
 }
+\value{
+Two character vectors of gene symbols: \code{CORE_CLOCK_GENES}
+  and \code{KNOWN_TARGET_GENES}, each listing
+  mouse and human forms. They are the default sets that
+  \code{\link{classify_gene_layer}} matches against.
+}
 \description{
 Mouse and human symbols for the transcriptional-translational feedback loop
 (\code{CORE_CLOCK_GENES}) and for well-established clock-controlled targets
