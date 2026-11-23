@@ -19,8 +19,8 @@ expression constrains future expression.
 ## Install
 
 ```r
-# install.packages("par2circadian")            # once on CRAN
-# remotes::install_github("mickwh2764/par2circadian-R")
+install.packages("par2circadian")                        # CRAN release
+# remotes::install_github("mickwh2764/par2circadian-R")  # development version
 ```
 
 Depends on base R and `stats` only.
