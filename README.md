@@ -45,6 +45,24 @@ fit_ar2(x, n_bootstrap = 2000, seed = 1, sampling_interval = 2)$timescale_ci
 
 `vignette("par2circadian")` works through a mouse liver series end to end.
 
+## Your own data
+
+Put one gene per row and one timepoint per column (gene names in the first
+column), evenly spaced, with no missing timepoints and one value per
+timepoint (average replicates). Then:
+
+```r
+expr <- as.matrix(read.csv("my_timecourse.csv", row.names = 1, check.names = FALSE))
+fits <- fit_ar2_batch(expr, sampling_interval = 2)   # your spacing, in hours
+write.csv(fits, "par2_results.csv", row.names = FALSE)
+```
+
+Always pass your real sampling interval: `half_life()` and `eigenperiod()`
+assume 2-hourly sampling otherwise. Genes with gaps should be filled or
+dropped first, because missing values are removed and the remaining points
+treated as consecutive. The vignette section "Using your own data" covers each
+step.
+
 ## What it is not
 
 `|lambda|` is **not** a rhythmicity test, and should not be reported as one.
