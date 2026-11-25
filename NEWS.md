@@ -8,6 +8,9 @@
   `timescale_imprecise`, which is `TRUE`, with a warning, when the interval is
   unbounded or spans more than tenfold. Matches par2-circadian 1.3.0.
 * Existing outputs are unchanged when `sampling_interval` is not supplied.
+* New vignette section, "Using your own data", covering data layout, even
+  spacing, missing timepoints, replicates, scale and the sampling interval;
+  summarised in the README.
 
 # par2circadian 0.1.1
 

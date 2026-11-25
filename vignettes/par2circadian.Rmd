@@ -143,6 +143,90 @@ h2 <- discover_hierarchy(fits,
 h2$n_clock
 ```
 
+## Using your own data
+
+Most of the work is preparing the data; the analysis itself is one call. The
+package expects one evenly spaced series per gene, and it does not check the
+points below for you.
+
+**Layout.** One row per gene and one column per timepoint, in time order, with
+gene identifiers in the first column of the CSV:
+
+```
+Gene,CT0,CT2,CT4,...
+Arntl,8.91,8.74,8.32,...
+Per2,6.10,6.48,7.02,...
+```
+
+**Even spacing.** The model treats consecutive columns as one sampling step
+apart. Uneven designs, or designs with a long gap, are not supported.
+
+**No missing timepoints.** `fit_ar2_batch()` drops `NA` values gene by gene and
+then treats the remaining points as consecutive, which silently joins the
+series across the gap. Fill gaps, or drop those genes, before fitting.
+
+**One value per timepoint.** With biological replicates, average them first.
+The bootstrap interval describes uncertainty in the fit to that one series, not
+variation between animals.
+
+**Scale.** Fit the values on the scale you would analyse them on. For RNA-seq
+that is usually a log scale such as `log2(TPM + 1)`; the package only
+mean-centres each series and does not transform it.
+
+**Length.** At least 6 timepoints are required. Below about 24, single-gene
+values are imprecise enough that they should be read with their bootstrap
+interval, or only as a ranking.
+
+**Sampling interval.** `|lambda|` is per sample, and `half_life()` and
+`eigenperiod()` assume 2-hourly sampling unless told otherwise. Always state
+your spacing.
+
+Here the bundled liver data is written out at 2-hourly spacing (every other
+column) so the steps can be shown end to end; replace `my_file` with the path
+to your own CSV:
+
+```{r own-data-file}
+my_file <- tempfile(fileext = ".csv")
+write.csv(liver[1:20, c(1, seq(2, ncol(liver), by = 2))], my_file, row.names = FALSE)
+```
+
+```{r own-data}
+expr <- read.csv(my_file, row.names = 1, check.names = FALSE)
+expr <- as.matrix(expr)
+dim(expr)                                  # genes x timepoints
+
+expr <- expr[stats::complete.cases(expr), , drop = FALSE]   # drop genes with gaps
+
+dt <- 2                                    # hours between samples
+fits <- fit_ar2_batch(expr, sampling_interval = dt)
+fits$half_life_h <- fits$half_life * dt   # samples -> hours
+fits$period_h    <- fits$eigenperiod * dt
+fits$dynamics    <- mapply(classify_dynamics, fits$eigenvalue, fits$root_type)
+head(fits[, c("gene", "eigenvalue", "root_type", "timescale", "half_life_h", "dynamics")])
+```
+
+The `half_life` and `eigenperiod` columns returned by `fit_ar2_batch()` are in
+samples; multiplying by the interval gives the `_h` columns in hours.
+`half_life()` and `eigenperiod()` take one value at a time, so use them for
+single fits rather than whole columns. For a gene of interest, add an
+interval:
+
+```{r own-data-gene}
+fit_ar2(expr[fits$gene[1], ], n_bootstrap = 500, seed = 1, sampling_interval = dt)
+```
+
+Save the table to combine it with rhythm-detection results (JTK_CYCLE, RAIN,
+MetaCycle) or open it in a spreadsheet:
+
+```{r own-data-save, eval = FALSE}
+write.csv(fits, "par2_results.csv", row.names = FALSE)
+```
+
+**Two conditions.** There is no built-in test for a difference in persistence.
+Fit each condition separately, join the tables by gene, and compare genes of
+interest using their bootstrap intervals; a difference smaller than the
+intervals should not be interpreted.
+
 ## Agreement with the Python implementation
 
 The reference implementation is the Python package `par2-circadian`. The test
